@@ -7,7 +7,7 @@ env:
   RESOURCEGROUPNAME: "techradar-rg"
   LOCATION: "North Europe"
   IMAGENAME: "findy-wallet-pwa"
-  REGISTRYNAME: "techradarcontainerregistry"
+  REGISTRYNAME: "techradaracontainerregistry"
   DOCKERFILE: "Dockerfile"
   
 jobs:
