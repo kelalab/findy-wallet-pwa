@@ -23,6 +23,7 @@ jobs:
 
 
     - name: Build and push webhook image to ACR
+      uses: ubuntu-latest
       id: build-webhook
       with:
         build-args: FOLDER=virta
