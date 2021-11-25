@@ -7,8 +7,6 @@ env:
   RESOURCEGROUPNAME: "techradar-rg"
   LOCATION: "North Europe"
   IMAGENAME: "findy-wallet-pwa"
-  REGISTRYNAME: "techradaracontainerregistry"
-
   DOCKERFILE: "Dockerfile"
   
 jobs:
@@ -19,13 +17,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Build image
+        run: docker build "$GITHUB_WORKSPACE" -f  ${{ env.DOCKERFILE }} -t ghcr.io/${{ env.IMAGENAME }}:${{ github.sha }}
+
       - name: Log in to registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build and push webhook image to ghcr
-        with:
-          build-args: FOLDER=virta
         run: |
-          docker build "$GITHUB_WORKSPACE" -f  ${{ env.DOCKERFILE }} -t ghcr.io/${{ env.IMAGENAME }}:${{ github.sha }}
           docker tag ghcr.io/${{ env.IMAGENAME }}:${{ github.sha }} ghcr.io/${{ env.IMAGENAME }}:latest
           docker push ghcr.io/${{ env.IMAGENAME }}:latest
