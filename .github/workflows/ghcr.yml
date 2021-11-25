@@ -27,7 +27,7 @@ jobs:
       id: build-webhook
       with:
         build-args: FOLDER=virta
-      run: |
+    - run: |
         docker build "$GITHUB_WORKSPACE" -f  ${{ env.DOCKERFILE }} -t ghcr.io/${{ env.IMAGENAME }}:${{ github.sha }}
         docker tag ghcr.io/${{ env.IMAGENAME }}:${{ github.sha }} ghcr.io/${{ env.IMAGENAME }}:latest
         docker push ghcr.io/${{ env.IMAGENAME }}:latest
