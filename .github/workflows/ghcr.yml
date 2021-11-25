@@ -23,7 +23,6 @@ jobs:
 
 
     - name: Build and push webhook image to ACR
-      uses: azure/docker-login@v1
       id: build-webhook
       with:
         build-args: FOLDER=virta
