@@ -8,6 +8,9 @@ const __dirname = dirname(__filename);
 const port:string = process.env.PORT || '4000';
 const app = express();
 
+const proxyTargetGQL = process.env.GQL_HOST;
+console.log(proxyTargetGQL);
+
 app.use(express.static(join(__dirname, './static')))
 app.get('/auth', (req,res) => {
     console.log('auth endpoint called');
