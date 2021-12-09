@@ -10,6 +10,7 @@ RUN npm i && ls -lha && npm run build
 
 FROM node:lts-slim
 COPY --from=build-server /app /app
+COPY --from=build-server /app/build /app
 COPY --from=build /app/build /app/static
 WORKDIR /app
 ENTRYPOINT ["npm", "run" ,"start"]
