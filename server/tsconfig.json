@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "module":"es2020",
+        "target": "es2020",
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "outDir": "build"
+    },
+    "filesGlob": [
+        "./**/*.ts",
+        "./**/*.tsx",
+        "!./**/*.d.ts",
+        "!./gulpfile.ts",
+        "./typings/**/*.d.ts",
+        "!./node_modules/**/*.ts",
+        "./node_modules/typescript/lib/lib.es6.d.ts"
+    ],
+    "exclude": [],
+}
