@@ -2,12 +2,10 @@ import express from 'express';
 import { createServer } from 'http';
 import { dirname,join } from 'path';
 import { fileURLToPath } from 'url';
-import fetch from 'node-fetch';
-import proxy from 'express-http-proxy';
 import {createProxyMiddleware} from 'http-proxy-middleware';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const port:string = process.env.Port || '4000';
+const port:string = process.env.PORT || '4000';
 const app = express();
 
 app.use(express.static(join(__dirname, './static')))
