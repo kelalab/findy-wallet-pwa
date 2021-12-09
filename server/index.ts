@@ -15,7 +15,7 @@ app.use(express.static(join(__dirname, './static')))
 app.get('/auth', (req,res) => {
     console.log('auth endpoint called');
 });
-const wsProxy = createProxyMiddleware('/gql/*', {target: `https://findy.local`, ws:true, 
+const wsProxy = createProxyMiddleware('/gql/*', {target: proxyTargetGQL, ws:true, 
 changeOrigin: true, // needed for virtual hosted sites
 selfHandleResponse: false,
 secure: false,
