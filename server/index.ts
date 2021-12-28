@@ -16,7 +16,7 @@ router.use(express.static(join(__dirname, './static')))
 router.get('/auth', (req,res) => {
     console.log('auth endpoint called');
 });
-const wsProxy = createProxyMiddleware('/gql/*', {target: proxyTargetGQL, ws:true, 
+const wsProxy = createProxyMiddleware(`${ctxPath.length>1?ctxPath:''}/gql/*`, {target: proxyTargetGQL, ws:true, 
 changeOrigin: true, // needed for virtual hosted sites
 selfHandleResponse: false,
 secure: false,
