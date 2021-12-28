@@ -74,14 +74,14 @@ function Login({ children }: IProps) {
               </Text>
             </Box>
             <ImageBox height="medium" width="small">
-              <Image src="/img/computer-m1.svg" fit="contain" />
+              <Image src="./img/computer-m1.svg" fit="contain" />
             </ImageBox>
           </CartoonBox>
 
           <LoginBox elevation="medium">
             <Image
               style={{ width: '35%', margin: '20px auto' }}
-              src="/img/logo.svg"
+              src="./img/logo.svg"
             />
             {window.PublicKeyCredential ? (
               <WebauthnLogin />
@@ -99,7 +99,7 @@ function Login({ children }: IProps) {
                     </Text>
                   </Box>
                   <ImageBox height="medium" width="small">
-                    <Image src="/img/sad-computer-m2.svg" fit="contain" />
+                    <Image src="./img/sad-computer-m2.svg" fit="contain" />
                   </ImageBox>
                 </CartoonBox>
               </div>
