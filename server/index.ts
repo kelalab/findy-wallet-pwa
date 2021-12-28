@@ -7,12 +7,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const port:string = process.env.PORT || '4000';
 const app = express();
-
+const router = express.Router();
 const proxyTargetGQL = process.env.GQL_HOST;
+const ctxPath = process.env.CTX_PATH || '/';
 console.log(proxyTargetGQL);
-
-app.use(express.static(join(__dirname, './static')))
-app.get('/auth', (req,res) => {
+app.use(ctxPath, router);
+router.use(express.static(join(__dirname, './static')))
+router.get('/auth', (req,res) => {
     console.log('auth endpoint called');
 });
 const wsProxy = createProxyMiddleware('/gql/*', {target: proxyTargetGQL, ws:true, 
@@ -29,7 +30,7 @@ onError: (err) => {
     console.log(err);
 }
 });
-app.use(wsProxy);
+router.use(wsProxy);
 
 //app.use('/gql/*', (req,res,next) => {console.log('reached'); next();}, proxy('http://localhost:8085'));
 
