@@ -5,7 +5,7 @@
   "dependencies": {
     "@apollo/client": "^3.4.16",
     "graphql": "^16.0.0",
-    "grommet": "^2.18.0",
+    "grommet": "^2.20.1",
     "grommet-icons": "^4.6.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
