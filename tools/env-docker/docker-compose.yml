@@ -3,8 +3,8 @@ services:
   core:
     image: ghcr.io/findy-network/findy-agent:latest
     volumes:
-      - ./config/steward.exported:/steward.exported
-      - ./config/cert:/grpc
+      - ../env/config/steward.exported:/steward.exported
+      - ../env/config/cert:/grpc
       - .data/agent:/root
     environment:
       FCLI_POOL_GENESIS_TXN_FILE: ''
@@ -18,7 +18,7 @@ services:
   auth:
     image: ghcr.io/findy-network/findy-agent-auth:latest
     volumes:
-      - ./config/cert:/grpc
+      - ../env/config/cert:/grpc
       - .data/auth:/data
     depends_on:
       - core
@@ -31,7 +31,7 @@ services:
   vault:
     image: ghcr.io/findy-network/findy-agent-vault:latest
     volumes:
-      - ./config/cert:/grpc
+      - ../env/config/cert:/grpc
     depends_on:
       - vault-db
       - core
@@ -57,3 +57,11 @@ services:
     environment:
       POSTGRES_DB: 'vault'
       POSTGRES_PASSWORD: 'password'
+  pwa:
+    build:
+      context: ../..
+      dockerfile: ./tools/env-docker/Dockerfile
+    ports:
+      - '3000:80'
+    depends_on:
+      - vault

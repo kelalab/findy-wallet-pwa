@@ -14,6 +14,7 @@ import { IEventEdge, ProtocolType } from './Types'
 import Job from './Job'
 import { device, colors, chat } from '../theme'
 import { useMutation } from '@apollo/client'
+import { useHistory } from 'react-router'
 
 import ScrollableFeed from 'react-scrollable-feed'
 import { SEND_MESSAGE_MUTATION, MARK_EVENTREAD_MUTATION } from './Queries'
@@ -75,6 +76,7 @@ const Input = styled(TextInput)`
 
 const EnterIcon = styled(LinkUp)`
   stroke: ${colors.background};
+  margin: auto;
 `
 
 const Send = styled(Button)`
@@ -103,35 +105,37 @@ type TParams = { id: string }
 
 function Connection({ match }: RouteComponentProps<TParams>) {
   const { setConnection, setConnectionsOpen } = useContext(ConnectionContext)
+  const history = useHistory()
+  const [markEvent] = useMutation(MARK_EVENTREAD_MUTATION, {
+    onCompleted: (resp: any) => {
+      //console.log(resp)
+    },
+    onError: (e) => {
+      console.log('ERROR: ' + e)
+    },
+  })
   const { loading, error, data, fetchMore } = useQuery(CONNECTION_QUERY, {
-    errorPolicy: 'all',
     variables: {
       id: match.params.id,
     },
-    onCompleted: () => {
-      complete()
-    },
-    onError: () => {
-      if (data) {
-        complete()
+    onCompleted: (data) => {
+      const edges = data.connection.events.edges
+      if (edges[edges.length - 1]) {
+        setConnection(data.connection.theirLabel)
+        setConnectionsOpen(true)
+        markEvent({
+          variables: {
+            input: {
+              id: edges[edges.length - 1].node.id,
+            },
+          },
+        })
       }
     },
+    onError: () => {
+      history.push(`/`)
+    },
   })
-
-  const complete = () => {
-    const edges = data.connection.events.edges
-    if (edges[edges.length - 1]) {
-      setConnection(data.connection.theirLabel)
-      setConnectionsOpen(true)
-      markEvent({
-        variables: {
-          input: {
-            id: edges[edges.length - 1].node.id,
-          },
-        },
-      })
-    }
-  }
 
   const node = data?.connection
   const jobIds: Array<string> = []
@@ -139,13 +143,6 @@ function Connection({ match }: RouteComponentProps<TParams>) {
   const [message, setMessage] = useState('')
   const [sendMessage] = useMutation(SEND_MESSAGE_MUTATION, {
     onCompleted: () => setMessage(''),
-    onError: (e) => {
-      console.log('ERROR: ' + e)
-    },
-  })
-
-  const [markEvent] = useMutation(MARK_EVENTREAD_MUTATION, {
-    onCompleted: (resp: any) => console.log(resp),
     onError: (e) => {
       console.log('ERROR: ' + e)
     },
@@ -181,14 +178,14 @@ function Connection({ match }: RouteComponentProps<TParams>) {
                   }
                 ></MoreButton>
               )}
-              {events.map(({ node }: IEventEdge) => (
+              {events.map(({ node }: IEventEdge, index: number) => (
                 <Box
                   animation={{ type: 'fadeIn', duration: 1500 }}
                   key={node.id}
                 >
                   {node.job &&
                     node.job?.node.protocol !== ProtocolType.NONE && (
-                      <Job job={node.job.node} />
+                      <Job job={node.job.node} index={index} />
                     )}
                 </Box>
               ))}
