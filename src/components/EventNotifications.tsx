@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { DataProxy } from '@apollo/client'
 
 import {
@@ -175,12 +175,13 @@ const updateProtocolItem = (connectionID: string, jobEdge: IJobEdge) => {
   }
 }
 
-function EventNotifications() {
+function EventNotifications({ closeMenu }: { closeMenu: () => void }) {
   /* const addedEventIds = useReactiveVar(addedEventIdsVar)*/
   const { /*data,*/ subscribeToMore } = useQuery(EVENTS_QUERY, {
     fetchPolicy: 'cache-only',
   })
   const [subscribed, setSubscribed] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (!subscribed) {
@@ -229,11 +230,22 @@ function EventNotifications() {
             }
             addedEventIdsVar([...addedEventIdsVar(), node.id])
           }
+          const { node }: IEventEdge = data.eventAdded
+          const job = node?.job?.node
+          // Navigate to new connection view automatically when it is established
+          if (
+            job?.protocol === ProtocolType.CONNECTION &&
+            job.output.connection
+          ) {
+            closeMenu()
+            navigate(`/connections/${job.output.connection.node.id}`)
+          }
+
           return newState.state // new state for all events
         },
       })
     }
-  }, [subscribeToMore, subscribed])
+  }, [subscribeToMore, subscribed, closeMenu, navigate])
   return <>{/* TODO: show notification of new event? */}</>
 }
 

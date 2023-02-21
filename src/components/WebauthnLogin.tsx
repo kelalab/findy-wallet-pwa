@@ -75,22 +75,33 @@ function WebauthnLogin() {
   const [waiting, setWaiting] = useState(false)
   const [email, setEmail] = useState('')
   const [operationResult, setOperationResult] = useState('')
+  const userVerificationDiscouraged = 'discouraged'
   const doRegister = async () => {
     setOperationResult('')
     const setError = () => {
+      setWaiting(false)
       setOperationResult(`Unable to register this device for email ${email}`)
       setEmail('')
     }
+
+    setWaiting(true)
     const response = await doFetch(`${config.authUrl}/register/begin/${email}`)
     if (response.status !== 200) {
       setError()
       return
     }
     const { publicKey } = await response.json()
+    const authenticatorSelection = publicKey.authenticatorSelection || {}
     const credential: ICredential = (await navigator.credentials.create({
       publicKey: {
         ...publicKey,
         challenge: bufferDecode(publicKey.challenge),
+        authenticatorSelection: {
+          ...authenticatorSelection,
+          userVerification:
+            authenticatorSelection.userVerification ||
+            userVerificationDiscouraged,
+        },
         user: {
           ...publicKey.user,
           id: bufferDecode(publicKey.user.id),
@@ -124,7 +135,6 @@ function WebauthnLogin() {
       },
     })
     if (result.status !== 200) {
-      setWaiting(false)
       setError()
       return
     } else {
@@ -137,13 +147,14 @@ function WebauthnLogin() {
   const doLogin = async () => {
     setOperationResult('')
     const setError = () => {
+      setWaiting(false)
       setOperationResult(`Unable to login with this device for email ${email}`)
       setEmail('')
     }
 
+    setWaiting(true)
     const response = await doFetch(`${config.authUrl}/login/begin/${email}`)
     if (response.status !== 200) {
-      setWaiting(false)
       setError()
       return
     }
@@ -152,6 +163,8 @@ function WebauthnLogin() {
       publicKey: {
         ...publicKey,
         challenge: bufferDecode(publicKey.challenge),
+        userVerification:
+          publicKey.userVerification || userVerificationDiscouraged,
         allowCredentials: publicKey.allowCredentials.map(
           (item: ICredentialDescriptor) => ({
             ...item,
@@ -179,7 +192,6 @@ function WebauthnLogin() {
       },
     })
     if (result.status !== 200) {
-      setWaiting(false)
       setError()
       return
     } else {
@@ -190,6 +202,28 @@ function WebauthnLogin() {
     }
   }
 
+  const tryDoRegister = async () => {
+    try {
+      await doRegister()
+    } catch {
+      // Sometimes iOS safari fails with
+      // "Unhandled Promise Rejection: NotAllowedError: This request has been cancelled by the user."
+      setOperationResult("Register failed for unknown reason. Please retry.")
+      setWaiting(false)
+    }
+  }
+
+  const tryDoLogin = async () => {
+    try {
+      await doLogin()
+    } catch {
+      // Sometimes iOS safari fails with
+      // "Unhandled Promise Rejection: NotAllowedError: This request has been cancelled by the user."
+      setOperationResult("Login failed for unknown reason. Please retry.")
+      setWaiting(false)
+    }
+  }
+
   const toggleRegister = (registerValue: boolean) => {
     setRegister(registerValue)
     setOperationResult('')
@@ -197,6 +231,7 @@ function WebauthnLogin() {
   return (
     <Login width="medium" margin="medium">
       <TextInput
+        autoComplete="on"
         name="email"
         placeholder="email"
         maxLength={256}
@@ -209,7 +244,7 @@ function WebauthnLogin() {
             <Btn
               disabled={email.length === 0 || waiting}
               label="Register"
-              onClick={doRegister}
+              onClick={tryDoRegister}
             ></Btn>
             <Text size="small" margin="12px 0 0 0">
               Existing user?{' '}
@@ -226,7 +261,7 @@ function WebauthnLogin() {
             <Btn
               disabled={email.length === 0 || waiting}
               label="Login"
-              onClick={doLogin}
+              onClick={tryDoLogin}
             ></Btn>
             <Text size="small" margin="12px 0 0 0">
               New user?{' '}

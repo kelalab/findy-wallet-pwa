@@ -1,45 +1,56 @@
+const invitationContent = require('./e2e.invitation.json')
 const user = require('./e2e.user.json')
+const organisationLabel = `#conn-${invitationContent['@id']}`
 const userCmd = `window.localStorage.token = "${user.jwt}"`
 const home = process.env.AGENCY_URL || 'http://localhost:3000'
 const addConBtn = '//button[contains(.,"Add connection")]'
-const organisationLabel = '//p[contains(.,"organisation")]'
 const messageInput = 'input[placeholder="Type your answer here..."]'
-const walletLink = '//a[contains(.,"Wallet")]'
+const walletLink = '#wallet-link'
+const credentialsHeader = user.existing
+  ? '//span[contains(.,"email")]'
+  : '//h2[contains(.,"Your wallet is empty")]'
+
+const login = browser =>
+  browser
+    .url(home)
+    .execute(userCmd)
+    .url(home)
+    .useXpath()
+    .waitForElementVisible(addConBtn)
+    .useCss()
 
 module.exports = {
   afterEach: (browser) => {
-    browser
-      .getLog('browser', (logEntriesArray) => {
-        console.log('Log length: ' + logEntriesArray.length)
-        logEntriesArray.forEach(function (log) {
-          console.log(
-            '[' + log.level.name + '] ' + log.timestamp + ' : ' + log.message
-          )
-        })
-      })
-      .end()
+
+    // TODO: fails occasionally with error:
+    // Error while running .getLogContents() protocol action: This driver instance does
+    //not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.
+
+    // browser.isLogAvailable(
+    //   browser.getLog('browser', (logEntriesArray) => {
+    //     console.log('Log length: ' + logEntriesArray.length)
+    //     logEntriesArray.forEach(function (log) {
+    //       console.log(
+    //         '[' + log.level.name + '] ' + log.timestamp + ' : ' + log.message
+    //       )
+    //     })
+    //   })
+    // )
+    browser.end()
   },
 
   'Check app loads': (browser) => {
     const newInvBtn = '//button[contains(.,"New invitation")]'
-    browser
-      .url(home)
-      .execute(userCmd)
-      .url(home)
+    login(browser)
       .useXpath()
-      .waitForElementVisible(addConBtn)
       .waitForElementVisible(newInvBtn)
   },
   'Check connection is done': (browser) => {
     const invitationInput = 'input[placeholder="Enter invitation code"]'
     const confirmBtn = '//button[contains(.,"Confirm")]'
-    const invitation = JSON.stringify(require('./e2e.invitation.json'))
-    browser
-      .url(home)
-      .execute(userCmd)
-      .url(home)
+    const invitation = JSON.stringify(invitationContent)
+    login(browser)
       .useXpath()
-      .waitForElementVisible(addConBtn)
       .click(addConBtn)
       .useCss()
       .waitForElementVisible(invitationInput)
@@ -47,24 +58,19 @@ module.exports = {
       .useXpath()
       .waitForElementVisible(confirmBtn)
       .click(confirmBtn)
+      .useCss()
       .waitForElementVisible(organisationLabel)
   },
   'Check navigation works': (browser) => {
-    const credentialsHeader = '//h2[contains(.,"Your wallet is empty")]'
-    browser
-      .url(home)
-      .execute(userCmd)
-      .url(home)
-      .useXpath()
+    login(browser)
+      .useCss()
+      .waitForElementVisible(walletLink)
       .click(walletLink)
+      .useXpath()
       .waitForElementVisible(credentialsHeader)
   },
   'Check invalid connection id redirects to home': (browser) => {
-    browser
-      .url(home)
-      .execute(userCmd)
-      .url(home)
-      .useCss()
+    login(browser)
       .waitForElementVisible(messageInput)
       .url(`${home}/connections/6e0a9f70-dece-4329-9e1e-93512f24d9dc`)
       .useCss()
@@ -77,11 +83,7 @@ module.exports = {
     const verificationText =
       '//p[contains(.,"Hello test! I\'m stupid bot who knows you have verified email address!!! I can trust you.")]'
     const credIcon = 'svg[aria-label=Certificate]'
-    browser
-      .url(home)
-      .execute(userCmd)
-      .url(home)
-      .useXpath()
+    login(browser)
       .waitForElementVisible(organisationLabel)
       .click(organisationLabel)
       .useCss()
@@ -128,9 +130,8 @@ module.exports = {
       .waitForElementVisible(verificationText)
 
       // Check that cred is in wallet
-      .useXpath()
-      .click(walletLink)
       .useCss()
+      .click(walletLink)
       .waitForElementVisible(credIcon)
   },
 }

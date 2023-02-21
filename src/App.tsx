@@ -1,5 +1,4 @@
-import React from 'react'
-import { Switch, Route, Redirect } from 'react-router-dom'
+import { Route, Routes, Navigate } from 'react-router-dom'
 import { Box, Grommet } from 'grommet'
 
 import Navi from './components/Navi'
@@ -9,24 +8,22 @@ import Credentials from './components/Credentials'
 import Login from './components/Login'
 import URLConnect from './components/URLConnect'
 import Me from './components/Me'
-import { findyTheme } from "./theme"
+import { findyTheme } from './theme'
 
 function App() {
   return (
-    <Grommet theme={findyTheme} full={true}>
+    <Grommet theme={findyTheme} style={{ height: '100%' }}>
       <Box fill={true}>
         <Login>
           <Navi>
-            <Switch>
-              <Route exact path="/">
-                <Redirect to="/connections" />
-              </Route>
-              <Route exact path="/connections" component={Home} />
-              <Route exact path="/connections/:id" component={Connection} />
-              <Route exact path="/credentials" component={Credentials} />
-              <Route exact path="/connect/:invitation" component={URLConnect} />
-              <Route exact path="/me" component={Me} />
-            </Switch>
+            <Routes>
+              <Route path="/" element={<Navigate to="/connections" />} />
+              <Route path="/connections" element={<Home />} />
+              <Route path="/connections/:id" element={<Connection />} />
+              <Route path="/credentials" element={<Credentials />} />
+              <Route path="/connect/:invitation" element={<URLConnect />} />
+              <Route path="/me" element={<Me />} />
+            </Routes>
           </Navi>
         </Login>
       </Box>

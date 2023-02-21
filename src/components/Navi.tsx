@@ -1,9 +1,11 @@
-import React, { ReactNode, useState, useContext, createContext } from 'react'
+import React, { ReactNode, useState, useContext } from 'react'
 import styled from 'styled-components'
 import { Menu as MenuIco } from 'grommet-icons'
-import EventNotifications from './EventNotifications'
+import { Link, NavLink } from 'react-router-dom'
+import { useQuery, gql } from '@apollo/client'
+import { useLocation } from 'react-router-dom'
 
-import { Link, NavLink, NavLinkProps } from 'react-router-dom'
+import EventNotifications from './EventNotifications'
 
 import {
   Box,
@@ -15,27 +17,13 @@ import {
   BoxProps,
   Collapsible,
   Anchor,
-  AnchorProps,
 } from 'grommet'
 
 import Add from './Add'
 import Connections from './Connections'
 
-import { colors, device, GreyButton } from '../theme'
+import { colors, device, GreyButton, Smoke } from '../theme'
 import { UserContext } from './Login'
-
-export const AnchorLink: React.FC<AnchorLinkProps> = (props) => {
-  return (
-    <Anchor
-      as={({ colorProp, hasIcon, hasLabel, focus, ...p }) => <NavLink {...p} />}
-      {...props}
-    />
-  )
-}
-
-export type AnchorLinkProps = NavLinkProps &
-  AnchorProps &
-  Omit<JSX.IntrinsicElements['a'], 'color'>
 
 const MenuIcon = styled(MenuIco)`
   vertical-align: middle;
@@ -67,51 +55,32 @@ const MenuButton = styled(Button)`
   }
 `
 
-const MenuLink = styled(AnchorLink)`
-  &.${(props) => props.activeClassName} {
-    color: ${colors.active};
-  }
-  display: inline-block;
-  color: ${colors.inactive};
-  padding: 1rem;
-  margin-right: 1rem;
-  &:hover {
-    text-decoration: none;
-    color: ${colors.active};
-  }
-  @media ${device.tablet} {
-    &.${(props) => props.activeClassName} {
-      color: ${colors.selected};
-    }
-    color: ${colors.brand};
-    padding: 0.2rem 1.2rem;
-    margin: 0rem 0.4rem;
-    &:hover {
-      text-decoration: none;
-      color: ${colors.selected};
-    }
-  }
-`
-
 const Sidebar = styled(GrommetSidebar)`
   padding: 0px;
   display: none;
   @media ${device.tablet} {
+    overflow: scroll;
     display: block;
     flex: 0 0 auto;
     width: 16.6666666667%;
   }
 `
 
-const DropBox = styled(Box)`
-  position: fixed;
-  z-index: 100;
+interface DropBoxProps {
+  showDialog: boolean
+}
+
+const DropBox = styled(Box)<DropBoxProps>`
+  position: absolute;
+  z-index: ${(props) => (props.showDialog ? 0 : 100)};
   display: inline-block;
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   background: ${colors.brand};
   @media ${device.tablet} {
+    position: fixed;
     display: none;
+    height: 100%;
   }
 `
 
@@ -121,6 +90,44 @@ const ConnectionBox = styled(Box)`
 
 const OptionsBox = styled(Box)`
   margin-left: auto;
+
+  .menu-item {
+    text-decoration: none;
+    display: inline-block;
+    padding: 1rem;
+    margin-right: 1rem;
+    span {
+      color: ${colors.background};
+      &:hover {
+        text-decoration: none;
+      }
+    }
+  }
+  @media ${device.tablet} {
+    .menu-item {
+      padding: 0.2rem 1.2rem;
+      margin: 0rem 0.4rem;
+      span {
+        color: ${colors.brand};
+        &:hover {
+          text-decoration: none;
+        }
+      }
+    }
+  }
+
+  .active {
+    span {
+      color: ${colors.active};
+    }
+  }
+  @media ${device.tablet} {
+    .active {
+      span {
+        color: ${colors.selected};
+      }
+    }
+  }
 `
 
 const WideOption = styled(Box)`
@@ -174,16 +181,23 @@ interface IProps {
   children: ReactNode
 }
 
-export const ConnectionContext = createContext<any>({})
+export const GET_ACTIVE_CONNECTION = gql`
+  query getActiveConnection {
+    activeConnectionName @client
+  }
+`
 
 function Navi({ children }: IProps) {
   const { username } = useContext(UserContext)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [connectionsOpen, setConnectionsOpen] = useState(false)
-  const [connection, setConnection] = useState('')
+  const [showDialog, setShowDialog] = useState(false)
+  let location = useLocation()
   const connectionNav = (direction: BoxProps['direction'] = 'row') => (
     <Nav animation="fadeIn" gap="small" align="start" direction={direction}>
-      <Add></Add>
+      <Add
+        onClick={() => setShowDialog(true)}
+        onClose={() => setShowDialog(false)}
+      ></Add>
       <Invite to="/me">
         <GreyButton
           label="New invitation"
@@ -191,55 +205,46 @@ function Navi({ children }: IProps) {
           onClick={() => setMenuOpen(false)}
         />
       </Invite>
-      {connectionsOpen && (
-        <ConnectionBox>
-          <Connections
-            hideMenu={setMenuOpen}
-            conOpen={setConnectionsOpen}
-          ></Connections>
-        </ConnectionBox>
-      )}
+      <ConnectionBox>
+        <Connections hideMenu={setMenuOpen}></Connections>
+      </ConnectionBox>
     </Nav>
   )
 
   const options = (direction: BoxProps['direction'] = 'row') => (
     <OptionsBox direction={direction}>
-      <MenuLink
-        to="/connections"
-        activeClassName="active"
-        onClick={() => {
-          setMenuOpen(false)
-          setConnectionsOpen(true)
-        }}
-      >
-        Chat
-      </MenuLink>
-      <MenuLink
+      <NavLink
         to="/credentials"
-        activeClassName="active"
         onClick={() => {
           setMenuOpen(false)
-          setConnection('')
-          setConnectionsOpen(false)
         }}
+        className={({ isActive }) =>
+          isActive ? 'menu-item active' : 'menu-item'
+        }
       >
-        Wallet
-      </MenuLink>
-      <MenuLink
+        <Anchor as="span" id="wallet-link">
+          Wallet
+        </Anchor>
+      </NavLink>
+      <NavLink
         to="/logout"
-        exact
-        activeClassName="active"
-        label="Logout"
+        className={({ isActive }) =>
+          isActive ? 'menu-item active' : 'menu-item'
+        }
         onClick={() => {
           localStorage.clear()
           window.location.reload()
         }}
-      />
+      >
+        <Anchor as="span">Logout</Anchor>
+      </NavLink>
       <Username round="large" background="brand">
         {username}
       </Username>
     </OptionsBox>
   )
+
+  const { data: activeConnection } = useQuery(GET_ACTIVE_CONNECTION)
 
   return (
     <>
@@ -248,13 +253,16 @@ function Navi({ children }: IProps) {
           <BrandBox
             onClick={() => {
               setMenuOpen(false)
-              setConnectionsOpen(true)
             }}
           >
             <Image fit="contain" src="/img/logo.svg" />
           </BrandBox>
         </Link>
-        <ConnectionName>{connectionsOpen && connection}</ConnectionName>
+        {location.pathname.startsWith('/connections') && (
+          <ConnectionName>
+            {activeConnection?.activeConnectionName}
+          </ConnectionName>
+        )}
         <MenuBox>
           <MenuButton
             icon={<MenuIcon />}
@@ -263,22 +271,20 @@ function Navi({ children }: IProps) {
         </MenuBox>
         <WideOption>{options()}</WideOption>
       </Header>
+      {showDialog && <Smoke />}
       <Collapsible open={menuOpen}>
         <DropBox
+          showDialog={showDialog}
           animation={{ type: 'slideDown', duration: 800, size: 'xlarge' }}
         >
           {options('column')}
           {connectionNav('column')}
         </DropBox>
       </Collapsible>
-      <Box direction="row" fill>
-        <EventNotifications />
+      <Box direction="row" fill overflow="hidden">
+        <EventNotifications closeMenu={() => setMenuOpen(false)} />
         <Sidebar background="brand">{connectionNav('column')}</Sidebar>
-        <ConnectionContext.Provider
-          value={{ setConnection, setConnectionsOpen }}
-        >
-          <Content pad="medium">{children}</Content>
-        </ConnectionContext.Provider>
+        <Content pad="medium">{children}</Content>
       </Box>
     </>
   )

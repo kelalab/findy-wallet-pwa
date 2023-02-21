@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import { Box, Button, Heading, Paragraph, TextInput } from 'grommet'
 import Dialog from './Dialog'
 import QrReader from './QrReader'
-import { colors, Smoke } from '../theme'
+import { colors } from '../theme'
 import { Close } from 'grommet-icons'
 
 import { useMutation, gql } from '@apollo/client'
@@ -83,11 +83,12 @@ const Row = styled(Box)`
 `
 
 interface IProps {
+  label?: string
   initialCode: string
   onClose: () => void
 }
 
-function AddDialog({ onClose, initialCode }: IProps) {
+function AddDialog({ onClose, initialCode, label }: IProps) {
   const [code, setCode] = useState(initialCode)
   const [errorMessage, setErrorMessage] = useState('')
   const close = () => {
@@ -102,69 +103,75 @@ function AddDialog({ onClose, initialCode }: IProps) {
       )
     },
   })
+
+  const onConfirm = (param?: string) => {
+    const newCode = param || code
+    if (newCode) {
+      connect({ variables: { input: { invitation: newCode } } })
+      setCode('')
+    } else {
+      close()
+    }
+  }
   return (
-    <Smoke>
-      <Dialog
-        position="center"
-        duration={0}
-        modal={false}
-        plain={false}
-        onClose={close}
-        onEsc={close}
-      >
-        <Content margin="small">
-          <Row direction="row">
-            <Head level="3">Add connection</Head>
-            <CloseButton
-              plain
-              icon={<CloseIcon />}
-              onClick={() => close()}
-            ></CloseButton>
-          </Row>
-          {errorMessage ? (
-            <Box pad="small">
-              {errorMessage.split('\n').map((item) => (
-                <div key={item}>{item}</div>
-              ))}
-            </Box>
-          ) : (
-            <Box
-              direction="column"
-              align="center"
-              justify="between"
-              pad="none"
-              margin="none"
-            >
-              {' '}
-              <Input
-                placeholder="Enter invitation code"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-              />
-              <Line>
-                <Span>OR</Span>
-              </Line>
-              <QrReader
-                onRead={(res: string) => {
-                  setCode(res)
-                }}
-              />
-              <ConfirmButton
-                label="Confirm"
-                onClick={() => {
-                  if (code) {
-                    connect({ variables: { input: { invitation: code } } })
-                    setCode('')
-                  } else {
-                    close()
-                  }
-                }}
-              ></ConfirmButton>
-            </Box>
-          )}
-        </Content>
-      </Dialog>
-    </Smoke>
+    <Dialog
+      position="center"
+      duration={0}
+      modal={false}
+      plain={false}
+      onClose={close}
+      onEsc={close}
+    >
+      <Content margin="small">
+        <Row direction="row">
+          <Head level="3">Add connection {label || ''}</Head>
+          <CloseButton
+            plain
+            icon={<CloseIcon />}
+            onClick={() => close()}
+          ></CloseButton>
+        </Row>
+        {errorMessage ? (
+          <Box pad="small">
+            {errorMessage.split('\n').map((item) => (
+              <div key={item}>{item}</div>
+            ))}
+          </Box>
+        ) : (
+          <Box
+            direction="column"
+            align="center"
+            justify="between"
+            pad="none"
+            margin="none"
+          >
+            {' '}
+            <Input
+              placeholder="Enter invitation code"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+            />
+            {label ? <div /> : (
+              <>
+                <Line>
+                  <Span>OR</Span>
+                </Line>
+                <QrReader
+                  onRead={(res: string) => {
+                    setCode(res)
+                    onConfirm(res)
+                  }}
+                />
+              </>)
+            }
+            <ConfirmButton
+              label="Confirm"
+              onClick={() => onConfirm()}
+            ></ConfirmButton>
+          </Box>
+        )}
+      </Content>
+    </Dialog>
   )
 }
 
