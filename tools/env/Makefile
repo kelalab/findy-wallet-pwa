@@ -1,4 +1,4 @@
-DC := docker-compose
+DC := docker compose
 
 init-store:
 	mkdir -p .data
