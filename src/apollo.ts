@@ -1,11 +1,10 @@
 import {
-  ApolloClient,
   ApolloLink,
-  InMemoryCache,
   split,
   HttpLink,
   makeVar,
-} from '@apollo/client'
+} from '@apollo/client/core'
+import {ApolloClient, InMemoryCache } from '@merged/solid-apollo'
 import {
   getMainDefinition,
   relayStylePagination,
@@ -16,7 +15,7 @@ import config from './config'
 import testClient, { cache as testCache } from './mock/client'
 import { activeConnectionName } from './components/Connection'
 
-const useMockResolver = process.env.REACT_APP_MOCK_RESOLVER === 'true'
+const useMockResolver = import.meta.env.REACT_APP_MOCK_RESOLVER === 'true'
 
 export const addedEventIdsVar = makeVar<string[]>([])
 

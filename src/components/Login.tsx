@@ -1,10 +1,17 @@
-import React, { ReactNode, createContext, useState } from 'react'
-import { useQuery, gql } from '@apollo/client'
+//import { useQuery, gql } from '@apollo/client'
+import { createQuery, gql } from '@merged/solid-apollo'
 import Waiting from './Waiting'
-import { Box, Heading, Text, Image } from 'grommet'
-import WebauthnLogin from './WebauthnLogin'
+//import WebauthnLogin from './WebauthnLogin'
+import WebauthnLogin from './WebauthnLogin2'
+
 import styled from 'styled-components'
 import { device } from '../theme'
+import { createContext, createSignal, JSXElement, onMount } from 'solid-js'
+import {createStore} from 'solid-js/store'
+import Box from './Box'
+import Heading from './Heading'
+import Text from './Text'
+import Image from './Image'
 
 const USER_QUERY = gql`
   query GetUser {
@@ -13,54 +20,73 @@ const USER_QUERY = gql`
     }
   }
 `
-const LoginBox = styled(Box)`
-  @media ${device.tablet} {
-    width: 30%;
-  }
-  width: 80%;
-  margin: auto;
-  padding: 20px;
-`
 
-const CartoonBox = styled(Box)`
-  @media ${device.tablet} {
-    margin-bottom: 2rem;
-  }
-  width: 80%;
-  margin: auto;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 0rem;
-`
-
-const ImageBox = styled(Box)`
-  @media ${device.tablet} {
-    display: flex;
-  }
-  display: none;
-`
-
-interface IProps {
-  children: ReactNode
+const CartoonBox = (props) => {
+  return <Box {...props}>{props.children}</Box>
 }
 
-export const UserContext = createContext({ username: '' })
+const ImageBox = (props) => {
+  return <Box>{props.children}</Box>
+}
 
-function Login({ children }: IProps) {
-  const [username, setUsername] = useState('username')
-  const { error, loading } = useQuery(USER_QUERY, {
+interface IProps {
+  children: JSXElement
+}
+
+export const UserContext = createContext([{ username: '' },{}])
+
+const UserGate = (props) => {
+  const data = createQuery(USER_QUERY);
+  let loading = false;
+  /*if(!user){
+    loading = true;
+  }*/
+  return <>{props.children(data()?.user)}</>
+}
+export const [username, setUsername] = createSignal('username')
+
+const unauthenticated = (data) => {
+  console.log('unauthenticated', data)
+  return data === undefined;
+  return data?.error?.graphQLErrors.find(
+  (item) => item.extensions && item.extensions.code === 'UNAUTHENTICATED'
+)}
+
+
+function Login(props: IProps) {
+  /*const { error, loading } = createQuery(USER_QUERY, {
     errorPolicy: 'all',
     onCompleted: (data) => setUsername(data.user.name),
-  })
-  const unauthenticated = error?.graphQLErrors.find(
-    (item) => item.extensions && item.extensions.code === 'UNAUTHENTICATED'
-  )
+  })*/
+
+  const [username, setUsername] = createSignal('');
+  const [loading, setLoading] = createSignal(false);
+  const [error, setError] = createSignal(null);
+  const [authenticated, setAuthenticated] = createSignal(false);
+  let data = createQuery(USER_QUERY);
+  /**
+   * 
+   * 
+   * */ 
+  /*onMount(() => {
+    
+    const user = data()?.user;
+    console.log('user query res', user);
+    if(!user){
+      setLoading(true);
+    }
+    setAuthenticated(!unauthenticated(user));
+  })*/
+  
+
+  //const {error, loading, state, latest} = data;
+  
   return (
     <>
-      {unauthenticated ? (
-        <div>
-          <CartoonBox direction="row-responsive" align="start" gap="small">
-            <Box align="start" width="medium" pad="small">
+       {unauthenticated(data()?.user) ? (
+        <div class="w-1/2">
+          <Box direction="row-responsive" align="start" gap="small">
+            <Box align="start" class="p-2 w-1/2" >
               <Heading level={2}>Welcome to Findy Web Wallet</Heading>
               <Text size="medium">
                 You can use your wallet to make connections with services and
@@ -76,9 +102,9 @@ function Login({ children }: IProps) {
             <ImageBox height="medium" width="small">
               <Image src="/img/computer-m1.svg" fit="contain" />
             </ImageBox>
-          </CartoonBox>
+          </Box>
 
-          <LoginBox elevation="medium">
+          <Box class="w-4/5 drop-shadow-md bg-white p-4">
             <Image
               style={{ width: '35%', margin: '20px auto' }}
               src="/img/logo.svg"
@@ -87,12 +113,12 @@ function Login({ children }: IProps) {
               <WebauthnLogin />
             ) : (
               <div>
-                <CartoonBox
+                <Box
                   direction="row-responsive"
                   align="start"
                   gap="small"
                 >
-                  <Box align="start" width="medium" pad="small">
+                  <Box align="start" width="medium" class="p-2">
                     <Heading level={2}>Welcome to Findy Web Wallet</Heading>
                     <Text size="medium">
                       Web wallet login not supported in this browser!
@@ -101,21 +127,44 @@ function Login({ children }: IProps) {
                   <ImageBox height="medium" width="small">
                     <Image src="/img/sad-computer-m2.svg" fit="contain" />
                   </ImageBox>
-                </CartoonBox>
+                </Box>
               </div>
             )}
-          </LoginBox>
+          </Box>
         </div>
       ) : (
-        <>
-          {loading || error ? (
-            <Waiting loading={loading} error={error} />
-          ) : (
-            <UserContext.Provider value={{ username }}>
-              {children}
-            </UserContext.Provider>
-          )}
-        </>
+          <>
+                
+            {() => {
+              const [state, setState] = createStore({ username: '' });
+              const usernamestore = [
+                state,
+                {
+                  setUserName(name:string) {
+                    setState("username", name);
+                  },
+                },
+              ];
+
+              console.log('user', data()?.user?.name)
+              let _username = data()?.user?.name;
+              if(_username && username!==_username){
+                setUsername(_username);
+                setState("username", _username);  
+              }
+              if(loading() || error() ){
+                console.log('rendering waiting', loading(), error())
+                return <>
+                  <Waiting loading={loading()} error={error()} />
+                </>
+              }
+              return (
+                <UserContext.Provider value={usernamestore}>
+                  {props.children}
+                </UserContext.Provider>
+              )
+            }}
+          </>
       )}
     </>
   )

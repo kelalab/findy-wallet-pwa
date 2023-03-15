@@ -34,16 +34,8 @@ const size = {
   desktop: '2560px',
 }
 
-export const Smoke = styled.div`
-  position: fixed;
-  bottom: 0;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: ${colors.smoke};
-  opacity: 0.6;
-  z-index: 2;
-`
+
+
 
 export const device = {
   mobileS: `(min-width: ${size.mobileS})`,
@@ -56,16 +48,7 @@ export const device = {
   desktopL: `(min-width: ${size.desktop})`,
 }
 
-export const GreyButton = styled(Button)`
-  font-size: 0.9rem;
-  font-weight: 500;
-  border-radius: 40px;
-  color: ${colors.darkBtnText};
-  background-color: ${colors.darkBtnBackground};
-  padding: 0.5rem 3rem 0.5rem 3rem;
-  text-align: center;
-  min-width: 205px;
-`
+
 
 export const Line = styled(Paragraph)`
   text-align: center;

@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Box, Button, Stack, TextInput, Keyboard } from 'grommet'
 import styled from 'styled-components'
 
 import { useQuery, useMutation, gql, makeVar } from '@apollo/client'
@@ -16,6 +15,10 @@ import { device, colors, chat } from '../theme'
 
 import { SEND_MESSAGE_MUTATION, MARK_EVENTREAD_MUTATION } from './Queries'
 import { LinkUp } from 'grommet-icons'
+import Box from './Box';
+import Stack from './Stack'
+import TextInput from './TextInput'
+import Button from './Button'
 
 export const activeConnectionName = makeVar('')
 
@@ -38,7 +41,7 @@ export const CONNECTION_QUERY = gql`
   ${pageInfo}
 `
 
-const Chat = styled(Box)`
+/*const Chat = styled(Box)`
   margin: 0 auto;
   height: 100%;
   width: 100%;
@@ -47,7 +50,11 @@ const Chat = styled(Box)`
   }
   position: relative;
   overflow: hidden;
-`
+`*/
+
+const Chat = (props) => {
+  return <Box class="w-full h-full mx-0 my-auto" {...props}/>
+}
 
 const ChatContent = styled(Box)`
   position: absolute;
@@ -57,27 +64,39 @@ const ChatContent = styled(Box)`
   padding: 1px;
 `
 
-const InputStack = styled(Stack)`
+/*const InputStack = styled(Stack)`
   width: 100%;
   position: relative;
   min-height: ${chat.inputHeight};
   margin: ${chat.inputMargin};
-`
+`*/
 
-const Input = styled(TextInput)`
+const InputStack = (props) => {
+  return <Stack class="w-full" {...props} />
+}
+
+/*const Input = styled(TextInput)`
   position: absolute;
   border-radius: ${chat.inputRadius};
   border: 1px solid ${colors.chatBorder};
   height: ${chat.inputHeight};
   z-index: 1;
-`
+`*/
+
+const Input = (props) => {
+  return <TextInput {...props}/>
+}
 
 const EnterIcon = styled(LinkUp)`
   stroke: ${colors.background};
   margin: auto;
 `
 
-const Send = styled(Button)`
+const Send = (props) => {
+  return <Button {...props}/>
+}
+
+/*const Send = styled(Button)`
   text-align: center;
   background: ${colors.brand};
   position: absolute;
@@ -90,14 +109,18 @@ const Send = styled(Button)`
   &:hover ${EnterIcon} {
     stroke: ${colors.selected};
   }
-`
+`*/
 
+const MoreButton = (props) => {
+  return <Button {...props}/>
+}
+/*
 const MoreButton = styled(Button)`
   width: 100%;
   border-radius: 0;
   padding: 10px;
   box-shadow: 40px 0px 30px 10px ${colors.shadow};
-`
+`*/
 
 const Container = styled.div`
   max-height: inherit;

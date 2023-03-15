@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
-import { Box, Button, TextArea } from 'grommet'
-import { useMutation, gql } from '@apollo/client'
-import styled from 'styled-components'
+import { createSignal, onMount } from 'solid-js'
+import Box from './Box';
+import Button from './Button';
+import TextArea from './TextArea';
 import { RotateRight } from 'grommet-icons'
-import { device } from '../theme'
+import { createMutation, gql } from '@merged/solid-apollo';
+import { FaSolidArrowRotateRight } from 'solid-icons/fa';
 const invitationFragment = gql`
   fragment InvitationFragment on InvitationResponse {
     id
@@ -14,8 +15,6 @@ const invitationFragment = gql`
   }
 `
 
-Me.fragment = invitationFragment
-
 const INVITATION_MUTATION = gql`
   mutation Invitation {
     invite {
@@ -25,25 +24,16 @@ const INVITATION_MUTATION = gql`
   ${invitationFragment}
 `
 
-const RawInvitation = styled(TextArea)`
+/*const RawInvitation = styled(TextArea)`
   font-weight: 400;
   min-height: 256px;
-`
+`*/
 
-const Generate = styled(Button)`
-  margin: 3rem 0 1rem 0;
-  max-width: 500px;
-  border: 1px solid;
-  padding: 10px;
-`
+const RawInvitation = (props) => {
+  return <TextArea {...props} />
+}
 
-const Copy = styled(Generate)`
-  margin: 1rem auto 0;
-  margin-bottom: 1rem;
-  align-self: center;
-`
-
-const Invitation = styled(Box)`
+/*const Invitation = styled(Box)`
   margin: 0 auto;
   flex-direction: column;
   max-width: 256px;
@@ -53,29 +43,31 @@ const Invitation = styled(Box)`
     max-width: none;
     margin: 0;
   }
-`
+`*/
 
-const Container = styled.div`
+const Invitation = (props) => {
+  return <Box {...props} />
+}
+
+
+
+/*const CenterContainer = styled.div`
   display: flex;
   justify-items: center;
   flex-direction: column;
-  overflow-y: auto;
-  hr {
-    margin: 1rem 0;
-  }
-`
+`*/
 
-const CenterContainer = styled.div`
-  display: flex;
-  justify-items: center;
-  flex-direction: column;
-`
+const CenterContainer = (props) => {
+  return <div class="flex items-center flex-col" {...props}/>
+}
+
 
 function Me() {
   const initialCopy = 'Copy to clipboard'
-  const [copyBtn, setCopyBtn] = useState(initialCopy)
-  const [copyUrlBtn, setCopyUrlBtn] = useState(initialCopy)
-  const [doInvite, { data }] = useMutation(INVITATION_MUTATION, {
+  const [copyBtn, setCopyBtn] = createSignal(initialCopy)
+  const [copyUrlBtn, setCopyUrlBtn] = createSignal(initialCopy)
+  const [mutate, data] = createMutation(INVITATION_MUTATION)
+  /*const [doInvite, { data }] = useMutation(INVITATION_MUTATION, {
     onCompleted: () => {
       setCopyBtn(initialCopy)
       setCopyUrlBtn(initialCopy)
@@ -83,7 +75,11 @@ function Me() {
   })
   if (data == null) {
     doInvite()
-  }
+  }*/
+
+  onMount(() => {
+    mutate()
+  })
 
   const copyToClipBoard = async (copiedText: string) => {
     try {
@@ -103,19 +99,20 @@ function Me() {
     }
   }
 
-  const webWalletURL = data && data.invite ? `${window.location.origin}/connect/${btoa(data.invite.raw)}` : ""
+  const webWalletURL = (data) => data && data.invite ? `${window.location.origin}/connect/${btoa(data.invite.raw)}` : ""
 
   return (
-    <Container>
-      <Generate
-        icon={<RotateRight />}
+    <div class="flex flex-col items-center">
+      <Button
+        class="mt-8 mb-1 border-2 p-4"
+        icon={<FaSolidArrowRotateRight />}
         label="Regenerate"
         alignSelf="center"
-        onClick={() => doInvite()}
-      ></Generate>
+        onClick={() => mutate()}
+      ></Button>
       {data && (
         <CenterContainer>
-          <hr />
+          <hr class="mx-3"/>
           <Invitation
             margin="large"
             animation={{
@@ -125,33 +122,36 @@ function Me() {
               size: 'large',
             }}
           >
+            {data()?.invite?.imageB64 &&
             <img
               alt="invitation QR code"
-              src={`data:image/png;base64,${data.invite.imageB64}`}
-            />
+              src={`data:image/png;base64,${data()?.invite?.imageB64}`}
+            />}
             <RawInvitation
               readOnly
               resize={false}
               fill
-              value={data.invite.raw}
+              value={data().invite.raw}
             />
           </Invitation>
-          <Copy
-            label={copyBtn}
-            onClick={() => copyToClipBoard(data.invite.raw)}
-          ></Copy>
+          <Button
+            label={copyBtn()}
+            onClick={() => copyToClipBoard(data().invite.raw)}
+          ></Button>
           <hr />
-          <Invitation>
+          <Box>
             <a href={webWalletURL}>Web Wallet URL</a>
-          </Invitation>
-          <Copy
-              label={copyUrlBtn}
-              onClick={() => copyUrlToClipBoard(webWalletURL)}
-            ></Copy>
+          </Box>
+          <Button
+              label={copyUrlBtn()}
+              onClick={() => copyUrlToClipBoard(webWalletURL(data()))}
+            ></Button>
         </CenterContainer>
       )}
-    </Container>
+    </div>
   )
 }
+
+Me.fragment = invitationFragment
 
 export default Me

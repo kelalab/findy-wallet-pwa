@@ -1,12 +1,15 @@
-import React, { useState } from 'react'
 import styled from 'styled-components'
-import { Box, Button, Heading, Paragraph, TextInput } from 'grommet'
+import { Paragraph, TextInput } from 'grommet'
+import Box from './Box'
+import Button from './Button'
+import Heading from './Heading'
 import Dialog from './Dialog'
 import QrReader from './QrReader'
 import { colors } from '../theme'
 import { Close } from 'grommet-icons'
 
 import { useMutation, gql } from '@apollo/client'
+import { createSignal } from 'solid-js'
 
 const CONNECT_MUTATION = gql`
   mutation Connect($input: ConnectInput!) {
@@ -73,14 +76,22 @@ const Head = styled(Heading)`
   margin: 0;
 `
 
-const Content = styled(Box)`
+/*const Content = styled(Box)`
   background: ${colors.background};
-`
+`*/
 
-const Row = styled(Box)`
+const Content = (props) => {
+  return <Box {...props}/>
+}
+
+/*const Row = styled(Box)`
   padding: 0 0 17px 0;
   width: 100%;
-`
+`*/
+
+const Row = (props) => {
+  return <Box {...props} />
+}
 
 interface IProps {
   label?: string
@@ -89,8 +100,8 @@ interface IProps {
 }
 
 function AddDialog({ onClose, initialCode, label }: IProps) {
-  const [code, setCode] = useState(initialCode)
-  const [errorMessage, setErrorMessage] = useState('')
+  const [code, setCode] = createSignal(initialCode)
+  const [errorMessage, setErrorMessage] = createSignal('')
   const close = () => {
     onClose()
     setErrorMessage('')
@@ -105,7 +116,7 @@ function AddDialog({ onClose, initialCode, label }: IProps) {
   })
 
   const onConfirm = (param?: string) => {
-    const newCode = param || code
+    const newCode = param || code()
     if (newCode) {
       connect({ variables: { input: { invitation: newCode } } })
       setCode('')

@@ -1,25 +1,29 @@
-import React from 'react'
-import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
+import { render } from 'solid-js/web';
+import { Router } from '@solidjs/router';
 
 import App from './App'
-import { ApolloProvider } from '@apollo/client'
+//import { ApolloProvider } from '@apollo/client'
+import './index.css'
+import { ApolloProvider, ApolloClient } from '@merged/solid-apollo';
+import {cache} from './apollo'
+import config from './config'
 import client from './apollo'
-import GlobalStyle from './theme/globalStyle'
-import * as serviceWorker from './serviceWorker'
+
+
+/*const client = new ApolloClient({
+  uri: `${config.gqlUrl}/query`,
+  cache
+})*/
 
 const container = document.getElementById('root')
-const root = createRoot(container!)
-root.render(
-  <React.StrictMode>
-    <GlobalStyle />
-    <BrowserRouter>
-      <ApolloProvider client={client}>
-        <App />
-      </ApolloProvider>
-    </BrowserRouter>
-  </React.StrictMode>
+render(() => 
+    <>
+      <Router>
+        <ApolloProvider client={client}>
+          <App />
+        </ApolloProvider>
+      </Router>
+    </>
+    , container
 )
 
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.register()

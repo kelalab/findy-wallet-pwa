@@ -1,9 +1,6 @@
-import React, { ReactNode, useEffect } from 'react'
-import { Layer as Lay, LayerPositionType, ThemeContext } from 'grommet'
-import styled from 'styled-components'
-import { device, colors } from '../theme'
+import { JSXElement, onMount } from 'solid-js'
 
-const Layer = styled(Lay)`
+/*const Layer = styled(Lay)`
   background: ${colors.background};
   padding: 9px;
   z-index: 1020;
@@ -11,12 +8,16 @@ const Layer = styled(Lay)`
   @media ${device.tablet} {
     width: 30%;
   }
-`
+`*/
+
+const Layer = (props) => {
+  return <div {...props} />
+}
 
 interface IProps {
-  children: ReactNode
+  children: JSXElement
   modal?: boolean
-  position: LayerPositionType
+  position: any
   duration: number
   plain: boolean
   onClose: () => void
@@ -31,7 +32,7 @@ function Dialog({
   onClose,
   ...rest
 }: IProps) {
-  useEffect(() => {
+  onMount(() => {
     if (duration) {
       const timer = setTimeout(() => {
         onClose()
@@ -40,13 +41,6 @@ function Dialog({
     }
   })
   return (
-    <ThemeContext.Extend
-      value={{
-        layer: {
-          zIndex: '200',
-        },
-      }}
-    >
       <Layer
         position={position || 'top'}
         modal={modal}
@@ -57,7 +51,6 @@ function Dialog({
       >
         {children}
       </Layer>
-    </ThemeContext.Extend>
   )
 }
 

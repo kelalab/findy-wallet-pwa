@@ -1,7 +1,7 @@
-const gqlHost = process.env.REACT_APP_GQL_HOST || 'localhost:8085'
-const authHost = process.env.REACT_APP_AUTH_HOST || 'localhost:8088'
-const httpScheme = process.env.REACT_APP_HTTP_SCHEME || 'http'
-const wsScheme = process.env.REACT_APP_WS_SCHEME || 'ws'
+const gqlHost = import.meta.env.REACT_APP_GQL_HOST || 'localhost:8085'
+const authHost = import.meta.env.REACT_APP_AUTH_HOST || 'localhost:8088'
+const httpScheme = import.meta.env.REACT_APP_HTTP_SCHEME || 'http'
+const wsScheme = import.meta.env.REACT_APP_WS_SCHEME || 'ws'
 
 const config = {
   wsUrl: `${wsScheme}://${gqlHost}`,

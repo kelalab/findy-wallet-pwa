@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
-import { Anchor, Button, Box, TextInput, Text } from 'grommet'
 import config from '../config'
-import styled from 'styled-components'
 import { RotateRight } from 'grommet-icons'
-import { Line } from '../theme'
-import { colors } from '../theme'
+import { createSignal, Show } from 'solid-js'
+import Box from './Box'
+import Button from './Button'
+import Anchor from './Anchor'
+import TextInput from './TextInput'
+import Text from './Text'
 
 // Base64 to ArrayBuffer
 const bufferDecode = (value: string) => {
@@ -53,28 +54,33 @@ const doFetch = async (
   })
 }
 
-const Login = styled(Box)`
-  margin: auto;
-`
-
-const Btn = styled(Button)`
+/*const Btn = styled(Button)`
   padding: 15px;
   width: 60%;
   text-align: center;
   background: ${colors.selected};
   color: ${colors.darkBtnText};
   box-shadow: 0px 8px 15px rgba(0, 110, 230, 0.2);
-`
+`*/
 
-const ModeAnchor = styled(Anchor)`
+const Btn = (props) => {
+  return <Button {...props} class="p-4 bg-selected text-darkBtnText">{props.children}</Button>
+}
+
+/*const ModeAnchor = styled(Anchor)`
   color: ${colors.selected};
-`
+`*/
 
-function WebauthnLogin() {
-  const [register, setRegister] = useState(false)
-  const [waiting, setWaiting] = useState(false)
-  const [email, setEmail] = useState('')
-  const [operationResult, setOperationResult] = useState('')
+const ModeAnchor = (props) => {
+  console.log('ModeAnchor', props)
+  return <Anchor {...props} class="text-selected"  >{props.children}</Anchor>
+}
+
+const WebauthnLogin = () => {
+  const [register, setRegister] = createSignal(true)
+  const [waiting, setWaiting] = createSignal(false)
+  const [email, setEmail] = createSignal('')
+  const [operationResult, setOperationResult] = createSignal('')
   const userVerificationDiscouraged = 'discouraged'
   const doRegister = async () => {
     setOperationResult('')
@@ -148,12 +154,12 @@ function WebauthnLogin() {
     setOperationResult('')
     const setError = () => {
       setWaiting(false)
-      setOperationResult(`Unable to login with this device for email ${email}`)
+      setOperationResult(`Unable to login with this device for email ${email()}`)
       setEmail('')
     }
 
     setWaiting(true)
-    const response = await doFetch(`${config.authUrl}/login/begin/${email}`)
+    const response = await doFetch(`${config.authUrl}/login/begin/${email()}`)
     if (response.status !== 200) {
       setError()
       return
@@ -180,7 +186,7 @@ function WebauthnLogin() {
       response: { authenticatorData, clientDataJSON, signature, userHandle },
     } = credential
     setWaiting(true)
-    const result = await doFetch(`${config.authUrl}/login/finish/${email}`, {
+    const result = await doFetch(`${config.authUrl}/login/finish/${email()}`, {
       id,
       rawId: bufferEncode(rawId),
       type,
@@ -214,6 +220,7 @@ function WebauthnLogin() {
   }
 
   const tryDoLogin = async () => {
+    console.log('tryDoLogin')
     try {
       await doLogin()
     } catch {
@@ -225,68 +232,70 @@ function WebauthnLogin() {
   }
 
   const toggleRegister = (registerValue: boolean) => {
+    console.log('toggleRegister', registerValue, 'register', register(), 'operationResult', operationResult())
     setRegister(registerValue)
     setOperationResult('')
   }
   return (
-    <Login width="medium" margin="medium">
+    <Box class="m-4" direction="column">
       <TextInput
         autoComplete="on"
         name="email"
         placeholder="email"
         maxLength={256}
-        value={email}
+        value={email()}
         onChange={(e) => setEmail(e.target.value)}
       />
+      <span>{register().toString()+ '    ' +  email()}</span>
+      <Text>{'Waiting ' + waiting().toString()}</Text>
       <Box direction="column" margin="12px 0 0 0" align="center">
-        {register ? (
+        <Show fallback={<>
+            <Btn
+              disabled={email().length === 0 || waiting()}
+              label="Login"
+              onClick={() => tryDoLogin}
+            ></Btn>
+            <Text size="small" margin="12px 0 0 0">
+              New user?{' '}
+              <ModeAnchor
+                disabled={waiting()}
+                onClick={() => toggleRegister(true)}
+              >
+                Register
+              </ModeAnchor>
+            </Text>
+          </>} 
+            when={register()}>
           <>
             <Btn
-              disabled={email.length === 0 || waiting}
+              disabled={email().length === 0 || waiting()}
               label="Register"
-              onClick={tryDoRegister}
+              onClick={() => tryDoRegister}
             ></Btn>
             <Text size="small" margin="12px 0 0 0">
               Existing user?{' '}
               <ModeAnchor
-                disabled={waiting}
+                disabled={waiting()}
                 onClick={() => toggleRegister(false)}
               >
                 Login
               </ModeAnchor>
             </Text>
           </>
-        ) : (
-          <>
-            <Btn
-              disabled={email.length === 0 || waiting}
-              label="Login"
-              onClick={tryDoLogin}
-            ></Btn>
-            <Text size="small" margin="12px 0 0 0">
-              New user?{' '}
-              <ModeAnchor
-                disabled={waiting}
-                onClick={() => toggleRegister(true)}
-              >
-                Register
-              </ModeAnchor>
-            </Text>
-          </>
-        )}
-        {operationResult !== '' && (
+          </Show>
+        {operationResult() !== '' && (
           <Text textAlign="center">
-            <Line></Line>
-            {operationResult}
+            {/*<Line></Line>*/}
+            {operationResult()}
           </Text>
         )}
-        {waiting && (
+        {waiting() && (
           <Box width="24px" animation="rotateRight">
             <RotateRight />
           </Box>
         )}
       </Box>
-    </Login>
+    </Box>
   )
 }
 

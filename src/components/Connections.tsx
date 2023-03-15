@@ -1,15 +1,20 @@
-import { Dispatch, SetStateAction } from 'react'
-import { Box, Button, Stack, Paragraph as P } from 'grommet'
 import styled from 'styled-components'
 import { useQuery, gql } from '@apollo/client'
-import { NavLink } from 'react-router-dom'
 
 import { IConnectionEdge } from './Types'
 import Waiting from './Waiting'
 import { pageInfo } from './Fragments'
 import { pairwise as fragments } from './Fragments'
 import { colors } from '../theme'
-import { ReactComponent as PersonIcon } from '../theme/person-icon.svg'
+//import { ReactComponent as PersonIcon } from '../theme/person-icon.svg'
+import { FaSolidPerson as PersonIcon } from 'solid-icons/fa';
+import { createQuery } from '@merged/solid-apollo'
+import Box from './Box'
+import { createSignal, Suspense } from 'solid-js'
+import { Link } from '@solidjs/router'
+import P from './Paragraph'
+import Button from './Button'
+import Stack from './Stack'
 
 export const CONNECTIONS_QUERY = gql`
   query GetConnections($cursor: String) {
@@ -26,7 +31,7 @@ export const CONNECTIONS_QUERY = gql`
   ${pageInfo}
 `
 
-const Container = styled(Box)`
+/*const Container = styled(Box)`
   .nav-item {
     text-decoration: none;
     border-left: 3px solid transparent;
@@ -46,12 +51,15 @@ const Container = styled(Box)`
       }
     }
   }
-`
+`*/
 
-const Paragraph = styled(P)`
-  font-size: 0.95rem;
-  font-weight: 500;
-`
+const Container = (props) => {
+  return <Box>{props.children}</Box>
+}
+
+const Paragraph = (props) => {
+  return <P {...props}/>
+}
 
 const Icon = styled(PersonIcon)`
   circle {
@@ -62,52 +70,50 @@ const Icon = styled(PersonIcon)`
   vertical-align: middle;
 `
 
-const RedDot = styled(Box)`
-  background: ${colors.eventDot};
-  border-radius: 50%;
-  width: 10px;
-  height: 10px;
-`
+const RedDot = (props) => {
+  return <Box class="rounded-xl bg-eventDot w-4 h-4" {...props}/>
+}
 
-function Connections({
-  hideMenu,
-}: {
-  hideMenu?: Dispatch<SetStateAction<boolean>>
-}) {
-  const { loading, error, data, fetchMore } = useQuery(CONNECTIONS_QUERY)
+export const [hideMenu, setHideMenu] = createSignal(false);
 
+function Connections(props) {
+  //const { loading, error, data, fetchMore } = createQuery(CONNECTIONS_QUERY)
+  const data = createQuery(CONNECTIONS_QUERY);
+  const {loading, error} = data;
   // Reverse order so that last connection is displayed first.
   // Add numbers to similar names. TODO: backend should do this.
   const names: { [key: string]: number } = {}
-  const items = [...(data?.connections?.edges || [])].reverse().map((item) => {
-    const name = item.node.theirLabel
-    if (names[name]) {
-      names[name] += 1
-    } else {
-      names[name] = 1
-    }
-    return {
-      ...item,
-      node: {
-        ...item.node,
-        theirLabel: `${name} ${names[name] > 1 ? `(${names[name]})` : ''}`,
-      },
-    }
-  })
+  const getItems = (data) => {
+    console.log('getItems', data)
+    const items = [...(data?.connections?.edges || [])].reverse().map((item) => {
+      const name = item.node.theirLabel
+      if (names[name]) {
+        names[name] += 1
+      } else {
+        names[name] = 1
+      }
+      return {
+        ...item,
+        node: {
+          ...item.node,
+          theirLabel: `${name} ${names[name] > 1 ? `(${names[name]})` : ''}`,
+        },
+      }
+    })
+    return items;
+  }
+  
 
   return (
     <>
-      {loading || error ? (
-        <Waiting loading={loading} error={error} />
-      ) : (
+      <Suspense fallback={<Waiting loading={loading} error={error} />}>
         <Container margin="none">
-          {items.map(({ node }: IConnectionEdge) => (
-            <NavLink
+          {getItems(data())?.map(({ node }: IConnectionEdge) => (
+            <Link
               onClick={() => {
-                hideMenu!(false)
+                setHideMenu(false)
               }}
-              key={node.id}
-              to={`/connections/${node.id}`}
+              href={`/connections/${node.id}`}
               className={({ isActive }) =>
                 isActive ? 'nav-item nav-item-active' : 'nav-item'
               }
@@ -123,22 +129,22 @@ function Connections({
                   {node.theirLabel}
                 </Paragraph>
               </Box>
-            </NavLink>
+            </Link>
           ))}
-          {data.connections.pageInfo.hasPreviousPage && (
+          {data()?.connections.pageInfo.hasPreviousPage && (
             <Button
               label="Load more"
               onClick={() =>
                 fetchMore({
                   variables: {
-                    cursor: data.connections.pageInfo.startCursor,
+                    cursor: data().connections.pageInfo.startCursor,
                   },
                 })
               }
             ></Button>
           )}
         </Container>
-      )}
+    </Suspense>
     </>
   )
 }

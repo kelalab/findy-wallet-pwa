@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from '@solidjs/router'
 import { DataProxy } from '@apollo/client'
 
 import {
@@ -23,6 +22,7 @@ import {
 } from './Queries'
 import { CREDENTIALS_QUERY, CONNECTION_CREDENTIALS_QUERY } from './Credentials'
 import { event as eventFragments } from './Fragments'
+import { createSignal, onMount } from 'solid-js'
 
 const EVENTS_SUBSCRIPTION = gql`
   subscription OnEventAdded {
@@ -180,10 +180,10 @@ function EventNotifications({ closeMenu }: { closeMenu: () => void }) {
   const { /*data,*/ subscribeToMore } = useQuery(EVENTS_QUERY, {
     fetchPolicy: 'cache-only',
   })
-  const [subscribed, setSubscribed] = useState(false)
+  const [subscribed, setSubscribed] = createSignal(false)
   const navigate = useNavigate()
 
-  useEffect(() => {
+  onMount(() => {
     if (!subscribed) {
       setSubscribed(true)
       subscribeToMore({

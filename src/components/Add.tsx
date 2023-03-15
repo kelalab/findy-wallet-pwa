@@ -1,19 +1,23 @@
-import React, { useState } from 'react'
 import AddDialog from './AddDialog'
-import { GreyButton } from '../theme'
-import styled from 'styled-components'
+//import styled from 'styled-components'
+import { createSignal } from 'solid-js'
+import Button, {GreyButton} from './Button'
 
-const AddButton = styled(GreyButton)`
+/*const AddButton = styled(GreyButton)`
   margin-top: 1rem;
-`
+`*/
 
 interface AddProps {
   onClick: () => void
   onClose: () => void
 }
 
+const AddButton = (props) => {
+  return <GreyButton {...props}/>
+}
+
 function Add({ onClick, onClose }: AddProps) {
-  const [dialogOpen, setOpen] = useState(false)
+  const [dialogOpen, setOpen] = createSignal(false)
   const close = () => {
     setOpen(false)
     onClose()
@@ -29,7 +33,7 @@ function Add({ onClick, onClose }: AddProps) {
           setOpen(true)
         }}
       />
-      {dialogOpen && <AddDialog onClose={close} initialCode="" />}
+      {dialogOpen() && <AddDialog onClose={close} initialCode="" />}
     </>
   )
 }

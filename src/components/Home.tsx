@@ -1,9 +1,13 @@
-import { useQuery, gql } from '@apollo/client'
-import { useNavigate } from 'react-router-dom'
-
+//import { useQuery, gql } from '@apollo/client'
+import { createQuery, gql} from '@merged/solid-apollo'
+//import { useNavigate } from 'react-router-dom'
+import { useNavigate } from '@solidjs/router'
 import Waiting from './Waiting'
-import { Box, Heading, Text, Image } from 'grommet'
-import styled from 'styled-components'
+import Box from './Box'
+import Heading from './Heading'
+import Text from './Text'
+import Image from './Image'
+//import styled from 'styled-components'
 
 export const CONNECTIONS_QUERY = gql`
   query GetConnections {
@@ -17,38 +21,46 @@ export const CONNECTIONS_QUERY = gql`
   }
 `
 
-const CartoonBox = styled(Box)`
+const CartoonBox = (props:any) => {
+  return <Box class="items-center align-center" {...props}>{props.children}</Box>
+}
+
+/*const CartoonBox = styled(Box)`
   justify-content: center;
   align-items: center;
-`
+`*/
 
 function Home() {
   const navigate = useNavigate()
-  const onCompleted = (data: any) => {
+ /* const onCompleted = (data: any) => {
     if (data && data.connections.edges.length > 0) {
       const { id } = data.connections.edges[0].node
       navigate(`/connections/${id}`)
     }
-  }
-  const { loading, error, data } = useQuery(CONNECTIONS_QUERY, {
+  }*/
+
+//  const { loading, error, data } = useQuery(CONNECTIONS_QUERY, {
+  const data = createQuery(CONNECTIONS_QUERY, {
+
     fetchPolicy: 'network-only', // Used for first execution
     nextFetchPolicy: 'cache-first', // Used for subsequent executions
-    onCompleted,
-  })
-  const isLoading = loading || (!error && !data)
-  const showWaiting = isLoading || error
-  const showIntroduction =
-    !loading &&
-    (error || !data?.connections?.edges || data.connections.edges.length === 0)
 
+    //onCompleted,
+  })
+  console.log('loading', data.loading, 'error', data.error, 'latest', data());
+  const isLoading = (loadeddata) => loadeddata.loading || (!loadeddata.error && !loadeddata.latest)
+  const showWaiting = (loadeddata) => isLoading(loadeddata) || loadeddata.error;
+  const showIntroduction = (loadeddata) => 
+    !isLoading(loadeddata) &&
+    (loadeddata.error || !loadeddata.latest?.connections?.edges || loadeddata.latest?.connections?.edges.length === 0)
   return (
     <>
-      {showWaiting && (
+      {showWaiting(data) && (
         <Box>
-          <Waiting loading={loading} error={error} />
+          <Waiting loading={data.loading} error={data.error} />
         </Box>
       )}
-      {showIntroduction && (
+      {showIntroduction(data) && (
         <div>
           <CartoonBox direction="row-responsive" align="start" gap="small">
             <Box align="start" width="medium" pad="small">
