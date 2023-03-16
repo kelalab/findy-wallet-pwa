@@ -86,7 +86,7 @@ function Login(props: IProps) {
        {unauthenticated(data()?.user) ? (
         <div class="w-1/2">
           <Box direction="row-responsive" align="start" gap="small">
-            <Box align="start" class="p-2 w-1/2" >
+            <Box align="start" class="p-2 w-2/3" >
               <Heading level={2}>Welcome to Findy Web Wallet</Heading>
               <Text size="medium">
                 You can use your wallet to make connections with services and
@@ -106,7 +106,8 @@ function Login(props: IProps) {
 
           <Box class="w-4/5 drop-shadow-md bg-white p-4">
             <Image
-              style={{ width: '35%', margin: '20px auto' }}
+              alt="Findy logo"
+              class="w-1/3 my-5 mx-auto"
               src="/img/logo.svg"
             />
             {window.PublicKeyCredential ? (

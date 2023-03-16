@@ -62,7 +62,7 @@ const bufferEncode = (value: ArrayBuffer) => {
 }
 
 const Btn = (props) => {
-  return <Button {...props} disabled={props.disabled} class="p-4 bg-selected text-darkBtnText">{props.children}</Button>
+  return <Button {...props} disabled={props.disabled} class="p-4 bg-selected text-darkBtnText w-3/5">{props.children}</Button>
 }
 
 /*const ModeAnchor = styled(Anchor)`
@@ -74,11 +74,11 @@ const ModeAnchor = (props) => {
   return <Anchor {...props} class="text-selected"  >{props.children}</Anchor>
 }
 
-const [register, setRegister] = createSignal(false)
 
 
 const WebauthnLogin = (props) => {
   const [waiting, setWaiting] = createSignal(false)
+  const [register, setRegister] = createSignal(false)
   const [email, setEmail] = createSignal('')
   const [operationResult, setOperationResult] = createSignal('')
   const userVerificationDiscouraged = 'discouraged'
